@@ -1,0 +1,13 @@
+build/
+.vs/
+.vscode/
+out/
+CMakeSettings.json
+*.user
+cmake-build-*/
+compile_commands.json
+data/
+*.csv
+*.json
+!vcpkg.json
+!CMakePresets.json
