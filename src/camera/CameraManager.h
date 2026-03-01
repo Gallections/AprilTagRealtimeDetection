@@ -21,6 +21,9 @@ public:
     /// Open a camera and create its ring buffer.
     bool addCamera(const CameraDevice::Settings& settings);
 
+    /// Open a video file as a source and create its ring buffer.
+    bool addVideo(const std::string& videoPath, int sourceId = -1000);
+
     /// Start capture on all opened cameras.
     void startAll();
 

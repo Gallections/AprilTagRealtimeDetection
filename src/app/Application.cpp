@@ -74,6 +74,24 @@ void Application::run() {
         // Feed latest camera frames to viewport for display
         feedViewportFrames();
 
+        // Auto-stop capture when all video sources finish
+        if (m_session && m_session->isCapturing()) {
+            bool allFinished = true;
+            bool hasVideoSources = false;
+            for (int camId : m_cameraManager->activeCameraIds()) {
+                auto* cam = m_cameraManager->camera(camId);
+                if (cam && cam->isVideoFile()) {
+                    hasVideoSources = true;
+                    if (!cam->isFinished())
+                        allFinished = false;
+                }
+            }
+            if (hasVideoSources && allFinished) {
+                m_session->stopCapture();
+                m_notifications.push("Video processing complete", NotificationManager::Level::Info);
+            }
+        }
+
         m_viewport.draw();
         m_notifications.draw();
 
@@ -132,6 +150,25 @@ void Application::handleAction(ControlPanel::Action action) {
         m_notifications.push("Calibration not yet wired to UI — use config file",
                              NotificationManager::Level::Warning);
         break;
+
+    case ControlPanel::Action::LoadVideo: {
+        std::string path(m_cpState.videoPath);
+        if (path.empty()) {
+            m_notifications.push("Enter a video file path first",
+                                 NotificationManager::Level::Warning);
+            break;
+        }
+
+        // Use a unique negative ID for video sources
+        int videoId = -1000 - static_cast<int>(m_cameraManager->cameraCount());
+        if (m_cameraManager->addVideo(path, videoId)) {
+            m_notifications.push("Video loaded: " + path);
+        } else {
+            m_notifications.push("Failed to load video: " + path,
+                                 NotificationManager::Level::Error);
+        }
+        break;
+    }
 
     default:
         break;

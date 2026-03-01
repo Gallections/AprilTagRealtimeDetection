@@ -25,6 +25,20 @@ bool CameraManager::addCamera(const CameraDevice::Settings& settings) {
     return true;
 }
 
+bool CameraManager::addVideo(const std::string& videoPath, int sourceId) {
+    auto device = std::make_unique<CameraDevice>();
+    if (!device->openVideo(videoPath, sourceId))
+        return false;
+
+    auto buffer = std::make_unique<FrameRingBuffer>(
+        static_cast<size_t>(m_ringBufferCapacity));
+
+    int id = device->cameraId();
+    m_cameras[id] = {std::move(device), std::move(buffer)};
+    spdlog::info("CameraManager: added video source {} ('{}')", id, videoPath);
+    return true;
+}
+
 void CameraManager::startAll() {
     for (auto& [id, entry] : m_cameras) {
         if (entry.device && entry.buffer)

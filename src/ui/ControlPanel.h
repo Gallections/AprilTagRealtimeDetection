@@ -15,17 +15,19 @@ public:
         StartCapture,
         StopCapture,
         StartCalibration,
-        AddCamera
+        AddCamera,
+        LoadVideo
     };
 
     struct State {
-        bool   capturing      = false;
-        int    activeCameras  = 0;
-        float  fps            = 0.0f;
-        int    newCameraIndex = 0;
-        int    newCameraWidth = 640;
-        int    newCameraHeight = 480;
-        int    newCameraFps   = 120;
+        bool        capturing       = false;
+        int         activeCameras   = 0;
+        float       fps             = 0.0f;
+        int         newCameraIndex  = 0;
+        int         newCameraWidth  = 640;
+        int         newCameraHeight = 480;
+        int         newCameraFps    = 120;
+        char        videoPath[512]  = {};
     };
 
     /// Draw the control panel. Returns the action requested by the user.

@@ -39,6 +39,15 @@ ControlPanel::Action ControlPanel::draw(State& state) {
 
     ImGui::Separator();
 
+    // Load video file
+    ImGui::Text("Load Video File");
+    ImGui::InputText("Video Path", state.videoPath, sizeof(state.videoPath));
+
+    if (ImGui::Button("Load Video", ImVec2(-1, 0)))
+        action = Action::LoadVideo;
+
+    ImGui::Separator();
+
     // Calibration
     if (ImGui::Button("Calibrate Selected Camera", ImVec2(-1, 0)))
         action = Action::StartCalibration;

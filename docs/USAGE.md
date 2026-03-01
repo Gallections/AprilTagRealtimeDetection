@@ -43,7 +43,22 @@ You can optionally pass a custom config file:
 
 ---
 
-### 2. Add a Camera
+### 2a. Load a Video File
+
+Instead of (or in addition to) a live camera, you can analyze pre-recorded video:
+
+1. In the **Controls** panel, enter the full path in the **Video Path** field (e.g., `C:\videos\session1.mp4`)
+2. Click **Load Video** — a viewport window appears with the video
+3. Click **Start Capture** — the video plays back at its native FPS while the detection pipeline processes every frame
+4. When the video ends, capture **auto-stops** and all data is flushed to the CSV/JSON export
+
+Supported formats: anything OpenCV can decode (`.mp4`, `.avi`, `.mkv`, `.mov`, etc.)
+
+You can load multiple videos simultaneously, or mix live cameras with video files.
+
+---
+
+### 2b. Add a Live Camera
 
 In the **Controls** panel:
 
