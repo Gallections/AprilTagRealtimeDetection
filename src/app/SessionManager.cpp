@@ -1,8 +1,43 @@
 #include "app/SessionManager.h"
 
+#include <opencv2/core.hpp>
 #include <spdlog/spdlog.h>
 
+#include <cmath>
+
 namespace kt {
+
+namespace {
+
+/// Estimate camera intrinsics from resolution assuming ~60° horizontal FOV.
+/// This gives approximate but usable pose data without manual calibration.
+CameraCalibration estimateIntrinsics(int cameraId, int width, int height) {
+    CameraCalibration calib;
+    calib.cameraId    = cameraId;
+    calib.imageWidth  = width;
+    calib.imageHeight = height;
+
+    // Assume ~60° horizontal FOV (typical for webcams)
+    constexpr double hfovDeg = 60.0;
+    constexpr double kPi = 3.14159265358979323846;
+    double fx = width / (2.0 * std::tan(hfovDeg * kPi / 360.0));
+    double fy = fx;  // square pixels
+    double cx = width  / 2.0;
+    double cy = height / 2.0;
+
+    calib.cameraMatrix = (cv::Mat_<double>(3, 3) <<
+        fx, 0,  cx,
+        0,  fy, cy,
+        0,  0,  1);
+    calib.distCoeffs = cv::Mat::zeros(1, 5, CV_64F);
+    calib.reprojectionError = -1.0;  // mark as estimated
+
+    spdlog::info("Auto-estimated intrinsics for camera {} ({}x{}, fx={:.1f})",
+                 cameraId, width, height, fx);
+    return calib;
+}
+
+} // anonymous namespace
 
 SessionManager::SessionManager(CameraManager& cameras,
                                CalibrationStore& calibStore,
@@ -40,9 +75,25 @@ bool SessionManager::startCapture() {
     }
 
     // Register camera ring buffers as detection sources
+    // Auto-estimate intrinsics for cameras without calibration
     for (int camId : m_cameras.activeCameraIds()) {
         auto* buffer = m_cameras.ringBuffer(camId);
         const CameraCalibration* calib = m_calibStore.get(camId);
+
+        if (!calib) {
+            // No saved calibration — estimate from resolution
+            auto* cam = m_cameras.camera(camId);
+            if (cam) {
+                auto estimated = estimateIntrinsics(
+                    camId, cam->settings().width, cam->settings().height);
+                m_calibStore.cache(estimated);
+                calib = m_calibStore.get(camId);
+                m_notifications.push(
+                    "Camera " + std::to_string(camId) + ": using estimated intrinsics (calibrate for accuracy)",
+                    NotificationManager::Level::Warning, 5.0f);
+            }
+        }
+
         if (buffer)
             m_detectionPool.addSource(camId, buffer, calib);
     }

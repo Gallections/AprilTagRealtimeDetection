@@ -41,6 +41,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 # Platform-specific
 if(WIN32)
     target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
+    target_link_libraries(${PROJECT_NAME} PRIVATE dwmapi imm32)
 endif()
 
 if(UNIX AND NOT APPLE)
@@ -51,6 +52,14 @@ endif()
 if(APPLE)
     target_compile_definitions(${PROJECT_NAME} PRIVATE GL_SILENCE_DEPRECATION)
 endif()
+
+# ── Copy config to build output ───────────────────────────────
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/config"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/config"
+    COMMENT "Copying config/ to output directory"
+)
 
 # ── Install ───────────────────────────────────────────────────
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
